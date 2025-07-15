@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Riesgo Cardiovascular Framingham-Colombia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        input[type="number"], select {
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 8px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .radio-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #667eea;
+        }
+
+        .radio-option label {
+            margin: 0;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 0 auto;
+            min-width: 200px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .risk-value {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .risk-category {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            font-weight: 600;
+        }
+
+        .risk-low { background: #d4edda; color: #155724; }
+        .risk-intermediate { background: #fff3cd; color: #856404; }
+        .risk-high { background: #f8d7da; color: #721c24; }
+
+        .disclaimer {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .disclaimer h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .disclaimer p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Calculadora de Riesgo Cardiovascular</h1>
+            <p>Framingham-Colombia (Ajustado para población colombiana)</p>
+        </div>
+
+        <div class="form-container">
+            <form id="riskForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="sexo">Sexo:</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="masculino" name="sexo" value="M" required>
+                                <label for="masculino">Masculino</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="femenino" name="sexo" value="F" required>
+                                <label for="femenino">Femenino</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edad">Edad (años):</label>
+                        <input type="number" id="edad" name="edad" min="30" max="79" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="colTotal">Colesterol Total (mg/dL):</label>
+                        <input type="number" id="colTotal" name="colTotal" min="100" max="400" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="colHDL">Colesterol HDL (mg/dL):</label>
+                        <input type="number" id="colHDL" name="colHDL" min="20" max="100" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pas">Presión Arterial Sistólica (mmHg):</label>
+                        <input type="number" id="pas" name="pas" min="90" max="200" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>¿Tiene tratamiento para hipertensión?</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="tratSi" name="tratamiento" value="true" required>
+                                <label for="tratSi">Sí</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="tratNo" name="tratamiento" value="false" required>
+                                <label for="tratNo">No</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>¿Es fumador/a?</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="fumaSi" name="fumador" value="true" required>
+                                <label for="fumaSi">Sí</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="fumaNo" name="fumador" value="false" required>
+                                <label for="fumaNo">No</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>¿Tiene diabetes?</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="diabSi" name="diabetes" value="true" required>
+                                <label for="diabSi">Sí</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="diabNo" name="diabetes" value="false" required>
+                                <label for="diabNo">No</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="calculate-btn">Calcular Riesgo Cardiovascular</button>
+            </form>
+
+            <div id="resultado" class="result">
+                <h3>Su riesgo cardiovascular a 10 años es:</h3>
+                <div id="riskValue" class="risk-value">0.0%</div>
+                <div id="riskCategory" class="risk-category">Bajo</div>
+                <p>Este porcentaje indica la probabilidad de sufrir un evento cardiovascular en los próximos 10 años.</p>
+            </div>
+
+            <div class="disclaimer">
+                <h4>Importante:</h4>
+                <p>
+                    Esta calculadora utiliza la ecuación de Framingham (2008) ajustada para la población colombiana (factor de corrección 0.75).
+                    El resultado es una estimación estadística que debe ser interpretada por un profesional de la salud.
+                    No reemplaza la consulta médica ni el criterio clínico profesional.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('riskForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Obtener valores del formulario
+            const sexo = document.querySelector('input[name="sexo"]:checked').value;
+            const edad = parseFloat(document.getElementById('edad').value);
+            const colTotal = parseFloat(document.getElementById('colTotal').value);
+            const colHDL = parseFloat(document.getElementById('colHDL').value);
+            const pas = parseFloat(document.getElementById('pas').value);
+            const tratHTA = document.querySelector('input[name="tratamiento"]:checked').value === 'true';
+            const fumador = document.querySelector('input[name="fumador"]:checked').value === 'true';
+            const diabetes = document.querySelector('input[name="diabetes"]:checked').value === 'true';
+
+            // Definir coeficientes y constantes según el sexo
+            let S0, coefEdad, coefColTotal, coefColHDL, coefPAS_sinTx, coefPAS_conTx, coefFumador, coefDiabetes, constante;
+
+            if (sexo === "M") {
+                // Coeficientes para hombres (Framingham 2008)
+                S0 = 0.88936;
+                constante = 23.9802;
+                coefEdad = 3.06117;
+                coefColTotal = 1.12370;
+                coefColHDL = -0.93263;
+                coefPAS_sinTx = 1.93303;
+                coefPAS_conTx = 1.99881;
+                coefFumador = 0.65451;
+                coefDiabetes = 0.57367;
+            } else {
+                // Coeficientes para mujeres (Framingham 2008)
+                S0 = 0.95012;
+                constante = 26.1931;
+                coefEdad = 2.32888;
+                coefColTotal = 1.20904;
+                coefColHDL = -0.70833;
+                coefPAS_sinTx = 2.76157;
+                coefPAS_conTx = 2.82263;
+                coefFumador = 0.52873;
+                coefDiabetes = 0.69154;
+            }
+
+            // Calcular la suma de β * X (usar ln para las variables continuas)
+            let sumatorio = 0;
+            sumatorio += coefEdad * Math.log(edad);
+            sumatorio += coefColTotal * Math.log(colTotal);
+            sumatorio += coefColHDL * Math.log(colHDL);
+
+            // Coeficiente de PAS depende de si hay tratamiento antihipertensivo
+            if (tratHTA) {
+                sumatorio += coefPAS_conTx * Math.log(pas);
+            } else {
+                sumatorio += coefPAS_sinTx * Math.log(pas);
+            }
+
+            if (fumador) {
+                sumatorio += coefFumador;
+            }
+
+            if (diabetes) {
+                sumatorio += coefDiabetes;
+            }
+
+            // Aplicar la fórmula de riesgo de Framingham
+            let exponencial = Math.exp(sumatorio - constante);
+            let riesgo10 = 1 - Math.pow(S0, exponencial);
+
+            // Ajustar al contexto colombiano multiplicando por 0.75
+            let riesgoAjustado = riesgo10 * 0.75;
+            let porcentajeRiesgo = riesgoAjustado * 100;
+
+            // Mostrar resultado
+            document.getElementById('riskValue').textContent = porcentajeRiesgo.toFixed(1) + '%';
+            
+            // Determinar categoría de riesgo
+            let categoria, claseCSS;
+            if (porcentajeRiesgo < 10) {
+                categoria = 'Riesgo Bajo';
+                claseCSS = 'risk-low';
+            } else if (porcentajeRiesgo < 20) {
+                categoria = 'Riesgo Intermedio';
+                claseCSS = 'risk-intermediate';
+            } else {
+                categoria = 'Riesgo Alto';
+                claseCSS = 'risk-high';
+            }
+
+            const categoryElement = document.getElementById('riskCategory');
+            categoryElement.textContent = categoria;
+            categoryElement.className = 'risk-category ' + claseCSS;
+
+            // Mostrar resultado con animación
+            document.getElementById('resultado').classList.add('show');
+            
+            // Hacer scroll hasta el resultado
+            document.getElementById('resultado').scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'center'
+            });
+        });
+    </script>
+</body>
+</html>
